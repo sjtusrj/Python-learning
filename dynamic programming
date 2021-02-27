@@ -1,0 +1,104 @@
+
+"""前情提要：木头根据不同长度有不同出售价格，求一根整木的分割方法售价最高"""
+
+original_price = [1, 5, 8, 9, 10, 17, 17, 20, 24, 30, 33]
+len(original_price)
+
+# 初始值设置
+from collections import defaultdict
+price = defaultdict(int)  # 设置为整数0
+
+for i, p in enumerate(original_price):  # 生成字典（长度：价格）
+    price[i+1] = p
+
+price
+
+# 定义函数
+def r(n):
+    candidates = []
+    for i in range(1, n):
+        candidates.append((r(i) + r(n-i), i))  # 依次切割
+    candidates.append((price[n], 0))  # 不切割
+    max_price, split_point = max(candidates, key=lambda x:x[0])  # 按价格排序，取最大值和切法
+
+    return max_price
+
+r(8)
+
+# 展示分割方案
+solution = {}
+
+def r(n):
+    candidates = []
+    for i in range(1, n):
+        candidates.append((r(i) + r(n-i), n))
+
+    candidates.append((price[n], 0))
+    max_price, split_point = max(candidates, key=lambda x:x[0])
+
+    global solution  # 改变全局变量
+    solution[n] = (split_point, n-split_point)
+    return max_price
+
+
+r(8)
+solution
+
+# decorator 装饰器
+
+# 定义函数
+def memo(func):
+    cache = {}  # 缓存
+    def _wrap(n):
+        if n in cache:
+            result = cache[n]
+        else:
+            result = func(n)
+            cache[n] = result
+        return result
+    return _wrap
+
+# 添加装饰器
+solution = {}
+@memo
+def r(n):
+    candidates = []
+    for i in range(1, n):
+        candidates.append((r(i) + r(n-i), i))
+    candidates.append((price[n], 0))
+    max_price, split_point = max(candidates, key=lambda x:x[0])
+
+    global solution
+    solution[n] = (split_point, n-split_point)
+    return max_price
+
+r(150)
+
+# 代码精简
+solution = {}
+@memo
+def r(n):
+    max_price, split_point = max([(price[n], 0)] + [(r(i) + r(n-i), i)   # 生成字典
+                                  for i in range(1, n)],   # 遍历
+                                 key=lambda x:x[0])
+    global solution
+    solution[n] = (split_point, n-split_point)
+    return max_price
+
+r(150)
+
+# 终极方案
+solution
+
+def not_cut(n):
+    return n == 0
+
+def parse_solution(target_length, revenue_solution):
+    left, right = revenue_solution[target_length]
+
+    if not_cut(left):
+        return [right]
+    return parse_solution(left, revenue_solution) + parse_solution(right, revenue_solution)
+
+
+parse_solution(150, solution)
